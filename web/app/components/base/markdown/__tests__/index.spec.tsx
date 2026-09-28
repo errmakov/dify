@@ -7,6 +7,13 @@ const { mockReactMarkdownWrapper } = vi.hoisted(() => ({
   mockReactMarkdownWrapper: vi.fn(),
 }))
 
+let mockLocale = 'en-US'
+
+vi.mock('#i18n', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('#i18n')>()),
+  useLocale: () => mockLocale,
+}))
+
 vi.mock('next/dynamic', () => ({
   default: () => {
     const MockStreamdownWrapper = (props: { latexContent: string }) => {
@@ -38,6 +45,21 @@ const getLastWrapperProps = (): CapturedProps => {
 describe('Markdown', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockLocale = 'en-US'
+  })
+
+  it('should not set a text direction for LTR locales', () => {
+    render(<Markdown content="Hello World" />)
+    expect(screen.getByTestId('markdown-body')).not.toHaveAttribute('dir')
+  })
+
+  it.each([
+    ['fa-IR', 'سلام'],
+    ['ar-TN', 'مرحبا'],
+  ])('should render right-to-left for the %s locale', (locale, content) => {
+    mockLocale = locale
+    render(<Markdown content={content} />)
+    expect(screen.getByTestId('markdown-body')).toHaveAttribute('dir', 'rtl')
   })
 
   it('should render wrapper content', () => {

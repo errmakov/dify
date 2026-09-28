@@ -3,6 +3,8 @@ import { cn } from '@langgenius/dify-ui/cn'
 import { flow } from 'es-toolkit/compat'
 import dynamic from 'next/dynamic'
 import { memo, useMemo } from 'react'
+import { useLocale } from '#i18n'
+import { getTextDirection } from '@/i18n/language'
 import { preprocessLaTeX, preprocessThinkTag } from './markdown-utils'
 
 const StreamdownWrapper = dynamic(() => import('./streamdown-wrapper'), { ssr: false })
@@ -46,11 +48,14 @@ export const Markdown = memo((props: MarkdownProps) => {
     mode,
     className,
   } = props
+  const locale = useLocale()
+  const dir = getTextDirection(locale) === 'rtl' ? 'rtl' : undefined
   const latexContent = useMemo(() => preprocess(content), [content])
   const hasContent = !!latexContent.trim() && !MARKDOWN_DIVIDER_ONLY_RE.test(latexContent)
 
   return (
     <div
+      dir={dir}
       className={cn('markdown-body', 'text-text-primary!', className)}
       data-testid="markdown-body"
     >
