@@ -3,7 +3,7 @@ import type { FC } from 'react'
 import type { FormValue } from '@/app/components/header/account-setting/model-provider-page/declarations'
 // type
 import type { GenRes } from '@/service/debug'
-import type { AppModeEnum, CompletionParams, Model, ModelModeType } from '@/types/app'
+import type { CompletionParams, Model } from '@/types/app'
 import {
   AlertDialog,
   AlertDialogActions,
@@ -27,6 +27,7 @@ import { useModelListAndDefaultModelAndCurrentProviderAndModel } from '@/app/com
 import ModelParameterModal from '@/app/components/header/account-setting/model-provider-page/model-parameter-modal'
 import { consoleQuery } from '@/service/console'
 import { generateBasicAppFirstTimeRule, generateRule } from '@/service/debug'
+import { AppModeEnum, ModelModeType } from '@/types/app'
 import { useAutoGenModel } from '../auto-gen-model-storage'
 import IdeaOutput from './idea-output'
 import InstructionEditorInBasic from './instruction-editor'
@@ -93,7 +94,8 @@ const GetAutomaticRes: FC<IGetAutomaticResProps> = ({
     return {
       name: defaultModel?.model ?? '',
       provider: defaultModel?.provider.provider ?? '',
-      mode: mode as unknown as ModelModeType,
+      // `mode` is the app mode (e.g. `agent-chat`); the API expects an LLM mode.
+      mode: mode === AppModeEnum.COMPLETION ? ModelModeType.completion : ModelModeType.chat,
       completion_params: {} as CompletionParams,
     }
   }, [defaultModel, mode, selectedModel, storedModel])

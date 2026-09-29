@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { AppModeEnum } from '@/types/app'
+import { AppModeEnum, ModelModeType } from '@/types/app'
 import GetAutomaticRes from '../get-automatic-res'
 
 const mockGenerateBasicAppFirstTimeRule = vi.fn()
@@ -255,6 +255,39 @@ describe('GetAutomaticRes', () => {
       }),
     )
   })
+
+  it.each([
+    [AppModeEnum.AGENT_CHAT, ModelModeType.chat],
+    [AppModeEnum.CHAT, ModelModeType.chat],
+    [AppModeEnum.COMPLETION, ModelModeType.completion],
+  ])(
+    'should send an LLM mode instead of the app mode for %s apps without a stored model',
+    async (appMode, expectedModelMode) => {
+      mockGenerateBasicAppFirstTimeRule.mockResolvedValue({ prompt: 'generated prompt' })
+
+      render(
+        <GetAutomaticRes
+          mode={appMode}
+          isShow
+          onClose={mockOnClose}
+          onFinished={mockOnFinished}
+          flowId="flow-1"
+          isBasicMode
+        />,
+      )
+
+      fireEvent.click(screen.getByText('set-basic-instruction'))
+      fireEvent.click(screen.getByText(/(?:^|\.)generate\.generate(?=$|:)/))
+
+      await waitFor(() => {
+        expect(mockGenerateBasicAppFirstTimeRule).toHaveBeenCalledWith(
+          expect.objectContaining({
+            model_config: expect.objectContaining({ mode: expectedModelMode }),
+          }),
+        )
+      })
+    },
+  )
 
   it('should close overwrite confirmation without applying the generated result when cancelled', async () => {
     mockGenerateBasicAppFirstTimeRule.mockResolvedValue({
